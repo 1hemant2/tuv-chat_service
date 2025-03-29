@@ -17,9 +17,9 @@ class UserController {
           if (!longitude || !lattitude) {
              throw errors('Longitude and Latitude are required', 400);
           }
-          const  sessionId = crypto.randomBytes(16).toString('hex');
-          await redisSetUserGeoLocation('sessionId', {longitude, lattitude, sessionId});
-          responseClient.setSuccess({sessionId});
+          const  userId = crypto.randomBytes(16).toString('hex');
+          await redisSetUserGeoLocation('userId', {longitude, lattitude, userId});
+          responseClient.setSuccess({userId});
           return responseClient.send(res);
        } catch (error) {
           console.error(error);
@@ -33,12 +33,12 @@ class UserController {
     */
     async deleteSessionKey (req, res) {
        try {
-           const sessionId = req.body.sessionId;
-           if (!sessionId) {
+           const userId = req.body.userId;
+           if (!userId) {
               responseClient.setError(400, 'Session Id is required');
               return responseClient.send(res);
            }
-           await redisDelete(sessionId);
+           await redisDelete(userId);
            responseClient.setSuccess('Session Key Deleted');
            return responseClient.send(res);
        } catch (error) {
@@ -53,18 +53,18 @@ class UserController {
      */
       async matchUser (req, res) {
         try {
-            const sessionId = req.query.sessionId;
-            if (!sessionId) {
+            const userId = req.query.userId;
+            if (!userId) {
               throw errors('Session Id is required', 400);
             }
-            const nearestSessionId = await redisGetNearestAvailableSession(sessionId);
-            if (!nearestSessionId) {
+            const nearestuserId = await redisGetNearestAvailableSession(userId);
+            if (!nearestuserId) {
                responseClient.setError(400,  'No match found please apply after sometime');
                return responseClient.send(res);
             }
-            await redisMarkSessionBusy(sessionId, nearestSessionId);
-            await redisMarkAlreadyMatchedSession(sessionId, nearestSessionId);
-            responseClient.setSuccess({currentSessionId : sessionId, nearestSessionId});
+            await redisMarkSessionBusy(userId, nearestuserId);
+            await redisMarkAlreadyMatchedSession(userId, nearestuserId);
+            responseClient.setSuccess({currentuserId : userId, nearestuserId});
             return responseClient.send(res);
         } catch (error) {
             console.error(error);
