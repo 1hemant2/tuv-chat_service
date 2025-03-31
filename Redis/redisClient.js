@@ -16,14 +16,14 @@ const redisDelete = async (key) => {
 }
 
 const redisSetUserGeoLocation = async (key, data) => {
-     const value = data.sessionId;
+     const value = data.userId;
      await redisClient.geoadd(key,  data.longitude,  data.lattitude, value);
-     await redisClient.hset('user_busy_status', data.sessionId, "false");
+     await redisClient.hset('user_busy_status', data.userId, "false");
      return data;
 }
 
 /**
- * @description : get the nearest first free sessionId
+ * @description : get the nearest first free userId
  * @Cons : need to optimize it further because it's time compexity is O(n * log n), for million records in worst case it will take approx 10 sec. we need to optimize it and bring in down to less than 100 ms.
  */
 const redisGetNearestAvailableSession = async (key) => { 
@@ -47,7 +47,7 @@ const redisGetNearestAvailableSession = async (key) => {
 // search the nearset geo locations 
 const redistSeachGeoLocation = async (member, radius, unit, sort, batch) => {
     const nearestSessions =  await redisClient.geosearch(
-        'sessionId', 
+        'userId', 
         'FROMMEMBER', String(member),  
         'BYRADIUS', Number(radius),
         String(unit), 
@@ -58,21 +58,21 @@ const redistSeachGeoLocation = async (member, radius, unit, sort, batch) => {
 }
 
 // mark the matching session as busy
-const redisMarkSessionBusy = async (sessionId1, sessionId2) => {
-    await redisClient.hset('user_busy_status', sessionId1, "true");
-    await redisClient.hset('user_busy_status', sessionId2, "true"); 
+const redisMarkSessionBusy = async (userId1, userId2) => {
+    await redisClient.hset('user_busy_status', userId1, "true");
+    await redisClient.hset('user_busy_status', userId2, "true"); 
 }
 
 // mark the sessions as already matched 
-const redisMarkAlreadyMatchedSession = async (sessionId1, sessionId2) => {
-    await redisClient.hset('user_matched', sessionId1, sessionId2);
-    await redisClient.hset('user_matched', sessionId2, sessionId1);
+const redisMarkAlreadyMatchedSession = async (userId1, userId2) => {
+    await redisClient.hset('user_matched', userId1, userId2);
+    await redisClient.hset('user_matched', userId2, userId1);
 }
 
 // check if session is already matched 
-const redisCheckAlreadyMatchedSession = async (currentSessionId, nearestSessionId) => {
-    const alreadyMatchedSession = await redisClient.hget('user_matched', currentSessionId);
-    if (alreadyMatchedSession === nearestSessionId) {
+const redisCheckAlreadyMatchedSession = async (currentuserId, nearestuserId) => {
+    const alreadyMatchedSession = await redisClient.hget('user_matched', currentuserId);
+    if (alreadyMatchedSession === nearestuserId) {
         return true;
     }
     return false;
