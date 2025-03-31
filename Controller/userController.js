@@ -55,7 +55,7 @@ class UserController {
         try {
             const userId = req.query.userId;
             if (!userId) {
-              throw errors('Session Id is required', 400);
+              throw errors('User id is required', 400);
             }
             const nearestuserId = await redisGetNearestAvailableSession(userId);
             if (!nearestuserId) {
@@ -64,7 +64,7 @@ class UserController {
             }
             await redisMarkSessionBusy(userId, nearestuserId);
             await redisMarkAlreadyMatchedSession(userId, nearestuserId);
-            responseClient.setSuccess({currentuserId : userId, nearestuserId});
+            responseClient.setSuccess({currentuserId : userId, nearestuserId, roomId : `${userId}:${nearestuserId}` });
             return responseClient.send(res);
         } catch (error) {
             console.error(error);
